@@ -1,0 +1,208 @@
+////// Liens utiles //////
+
+https://lecrabeinfo.net/installer-linux-debian-le-guide-complet.html
+https://www.it-connect.fr/chapitres/installation-dun-serveur-ssh-et-premiere-connexion/
+http://manpages.ubuntu.com/manpages/bionic/man8/pam_pwquality.8.html
+http://www.ordinateur.cc/syst%C3%A8mes/Linux/206058.html
+https://milq.github.io/enable-sudo-user-account-debian/
+https://www.server-world.info/en/note?os=Debian_10&p=passwordhttps://www.how2shout.com/linux/install-and-configure-ufw-on-debian-11-or-10/
+https://blog.malandra.be/forcer-lutilisation-de-mot-de-passe-complexe/
+https://www.youtube.com/watch?v=8tZzHCFU3c4&ab_channel=QLVTechnetttps://debian-facile.org/doc:securite:passwd:libpam-pwquality
+
+
+////// VirtualBox installation //////
+
+--- Dans le terminal ---
+sudo apt update && sudo apt upgrade
+wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+echo "deb [arch=amd64] http://download.virtualbox.org/virtualbox/debian focal contrib" | sudo tee /etc/apt/sources.list.d/virtualbox.list
+sudo apt update
+sudo apt install virtualbox-6.1
+systemctl status vboxdrv
+
+////// Check de l'installation //////
+
+--- Dans le terminal ---
+systemctl status vboxdrv
+
+////// Creer une VM Debian11 //////
+
+--- Telecharger l'iso ---
+https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-11.1.0-amd64-netinst.iso
+
+--- Dans VirtualBox ---
+-> New
+Name = Debian11
+Machine Folder = sgoinfre
+Type = Linux
+Version = Debian(64-bit)
+Memory size = 1024
+Hard disk = Create a virtual hard disk now
+Hard disk type file = VDI
+Storage on physical hard disk = Dynamically allocated
+File location and size = sgoinfre && 8,00GB
+
+-> Debian11 (left of the window)
+--> Settings
+---> Storage
+----> Controller: IDE/Empty
+-----> Optical Drive (petit disk a droite) = Choose a disk file(iso Debian)
+
+////// Demarrer et installer Debian11 //////
+
+-> Start
+
+Choisir Graphical install pour installation graphique
+Language = English - English
+Location = -> Other -> Europe -> France
+(Configure locales = United States - en_US.UTF-8)
+Keymap = American English
+Hostname = lleveque42 (sujet)
+Domaine name = (laisser vide)
+Set up users and password =
+	- root password = MDP intra
+	- re-enter = MDP intra
+	- full name = Leveque Louis
+	- username = lleveque
+	- password = MDP intra
+	- re-enter = MDP intra
+Partition disks =
+	- method = Guided - use entire disk and set up encrypted LVM (sujet)
+	- select disk = (choisir le disk)
+	- scheme = Separate /home partition
+	- write changes = yes
+	- encryption passphrase = MDP intra
+	- re-enter = MDP intra
+	- amount = max (donne tout l'espace dispo)
+	- configure iSCSI = finish partitioning
+	- write = yes
+	- scan extra = no (rien d'autre a ajouter)
+	- debian archive mirror = France (miroir pour telecharger les paquets)
+	- debian archive mirror = deb.debian.org
+	- HTTP proxy = (laisser vide, proxy si besoin)
+	- participate in the package usage survey = no
+	- software to install = none (pas d'interface graphgique car serv donc minimun de soft)
+	- install the grub = yes
+	- device for boot = /dev/sda
+Installation complete = continue
+
+////// Configuration //////
+
+--- Hostname ---
+hostname /#/ check si le nom de l'hostname est bien lleveque42
+sudo hostname lleveque42 /#/ change le nom de l'hostname si pas ok
+
+--- Check partition LVM ---
+lsblk /#/ affiche le disque
+
+--- Installer sudo ---
+su /#/ va sur le root
+apt-get install sudo /#/ installe sudo
+apt-get update
+apt-get upgrade /#/ met paquets a jour
+sudo visudo /#/ ouvre le fichier des user sudo
+lleveque ALL=(ALL:ALL) ALL /#/ ajouter a la fin de visudo
+
+--- Changer le mdp ---
+sudo passwd user /#/ change le mdp du user rentre
+
+--- Mettre SSH sur le port 4242 ---
+sudo systemctl status ssh /#/ donne le port sur le quel se trouve ssh
+sudo nano /etc/ssh/sshd_config /#/ ouvre le fichier config
+Port 4242 /#/ en dessous de port 22
+save et quit
+sudo systemctl restart sshd /#/ redemarre le serv
+sudo systemctl status ssh /#/ verifie si le port ssh est le bon
+sudo apt-get install ifconfig /#/ installe ifconfig si pas installer
+ip a /#/ pour obtenir l'adresse ip
+ss -tulnp /#/ voir les ports utilises
+
+--- Se connecter en SSH via un autre terminal ---
+	- Dans VirtualBox :
+		-> Debian11
+		--> Settings
+		---> Networks
+		----> Advanced
+		-----> Port Forwarding
+			Name = SSH
+			Protocol = TCP
+			Host IP = 10.12.6.10 (42) ou adresse ip correspondante
+			Host Port = port non utilise (ex : 42420)
+			Guest Port = 4242
+	- Dans un autre terminal :
+		ssh user@10.12.6.10 -p42420 (42) ou ssh user@adressip -pHost_Port /#/ se connecte au serveur
+Connection ok normalement
+
+--- Changer de user ---
+su - lleveque
+su
+
+--- Set up UFW sur le port 4242 ---
+sudo apt updtae /#/ check dernieres mises a jour
+sudo nano /etc/default/ufw /#/ ouvre le fichier pour check si ipv6 est enable
+IPv6 = yes
+sudo apt install ufw /#/ installe ufw
+sudo ufw status /#/ check si ufw est actif
+sudo ufw enable /#/ active ufw
+sudo ufw allow 4242 /#/ active ufw sur le port 4242
+sudo ufw status verbose /#/ check ou ufw est actif
+
+--- Set up groupes ---
+groups /#/ affiche les groupes
+users /#/ afficher les users
+groups <user> /#/ afficher les groupes de user
+sudo useradd <user> /#/ ajouter un user
+sudo groupadd <group> /#/ ajouter un groupe
+sudo gpasswd -a <user> <group>
+
+--- Politique de mdp fort ---
+sudo apt install vim /#/ installe vim
+sudo apt-get install libpam-pwquality /#/ installe lib pour checker les pw
+
+sudo vim /etc/login.defs /#/ ouvre le fichier pour set les days limites mdp
+PASS_MAX_DAYS	30 /#/ set l'expiration du mdp a 30 jours
+PASS_MIN_DAYS	2 /#/ set le temps de maj a 2 jours
+PASS_WARN_AGE	7 /#/ set le warn d'expiration a 7 jours avant
+
+sudo vim /etc/security/pwquality.conf /#/ ouvre le fichier pour set les limites de caracteres
+minlen = 10 /#/ min de caracteres
+dcredit = -1 /#/ min de chiffre
+ucredit = -1 /#/ min de majuscule
+difok = 7 /#/ nb de caracteres differents de l'ancien !! trouver comment ne pas appliquer a root
+maxrepeat = 3 /#/ max de repetitions consecutives d'un meme caractere
+usercheck = 1 /#/ check si le user est dans le password
+enforce_for_root /#/ impose le pwquality au root
+
+--- Configurer sudo ---
+sudo visudo /#/ ouvrir le fichier de parametre sudo
+Defaults	requiretty /#/ active tty
+Defaults	secure_path="......:/bin:/snap/bin" /#/ rajoute /snap/bin aux path
+Defaults	passwd_tries=3 /#/ set le nb de retry a 3
+Defaults	insults /#/ set le message d'erreur de mdp sudo en insultes
+Defaults	logfile="/var/log/sudo/sudo.log" /#/ archive chaque action en sudo
+
+////// monitoring.sh //////
+
+voir cron pour l'afficher toutes les 10 min
+
+--- Creation des variables ---
+ARCHI=`uname -a`
+CPU_PHYSICAL=`grep -c ^processor /proc/cpuinfo`
+vCPU=`lscpu | grep "Thread(s)" | awk '{print $4}'`
+MEM_USE=`free -m | grep "Mem" | awk '{print $3"/"$2"MB ("$3/$2*100"%)"}'`
+
+
+--- Architecture ---
+wall "### Architeture ###
+$ARCHI /#/ afficher l'archi et la version kernel
+
+--- CPU physical ---
+### CPU physical ###
+$CPU_PHYSICAL
+
+--- vCPU---
+### vCPU ###
+$vCPU
+
+
+

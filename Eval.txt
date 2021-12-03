@@ -1,0 +1,3 @@
+////// A savoir faire //////
+
+Changer le nom de l'hostname

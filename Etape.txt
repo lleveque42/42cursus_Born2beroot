@@ -1,0 +1,141 @@
+                Etape pour le projet Born2BeRoot :
+
+1/ Telecharger l'iso de debian :
+    https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/
+    debian-11.1.0-amd64-netinst.iso
+    Mettre l'iso dans sgoinfre pour avoir assez de place.
+
+2/ Installer la VM via VirtualBox :
+    New
+    Installer dans sgoinfre
+    Laisser 1024 de ram par defaut
+    Create a virtual hard disk now
+    VDI (VirtualBox Disk Image)
+    Dynamically allocated
+    Choisir d'installer la vm dans sgoinfre
+
+3/ Lier la VM et l'iso de debian
+    Parametres->Stockage
+    Controller : IDE -> Empty
+    Optical Drive -> Choose a disk file
+    Choisir l'image de debian
+
+4/ Demarrer la VM et installer debian
+    Install
+    English // Choix de la langue pour le proceder d'installation
+    France // Zone Geographique ou est installer notre VM
+    American English // Type de clavier
+    jbonniva42 // hostname de notre machine (demande dans le sujet)
+    Ne pas changer le nom de domaine // Utile si on veut heberger un serveur de ce que j'ai compris
+    MDP intra // Mot de passe pour le compte super user (root).
+    MDP intra // confirmation.
+    Bonnivard Julien // Notre nom et notre prenom
+    jbonniva // Creation du premier utilisateur (comme celui de l'intra, mais sans le 42)
+    MDP intra // Mdp du nouveau compte
+    MDP intra // confirmation
+    Guided - use entire disk and set up encrypted // Permet de partitionner le disaue et de le chiffrer (demande dans le sujet)
+    Next // Choix du disque que l'on va partitionner
+    Separate /home (surement autre chose a l'ecole) // Permet de separer les donnes du home de la VM (on demande une vm avec le minimum de chose dedans)
+    Yes // On valide le fait que l'on ecrit sur le disque pour installer le VM
+    MDP intra // MDP pour acceder a notre partition chiffre
+    MDP intra // confirmation
+    max // La taille que l'on va allouer a notre partition. On ecrit max pour directement allouer toute la taille.
+    Yes // On confirme la taille.
+    No // On a rien d'autre a installer.
+    France // Miroir ou l'on va telecharger les paquets
+    deb.debian.org // site ou on l'a telecharger.
+    laisser en blank // Laisser vide si utilise pas de proxy
+    No // Permet d'envoyer nos donnees
+    Tout deselectionner // On nous demande le minimum de chose et pas de ssh sur root
+    Yes // Grub boot loader permet de demarer notre noyaux debian (commer le dualboot a la maison )
+    /dev/sda // Endroit ou on installe grub
+    Continue // installation finit on peut boot notre debian
+
+5/ Demarrer sur Debian GNU/Linux
+    MDP intra
+    jbonniva
+    MDP intra
+ ----------------------------------------------------------
+
+ 6/ Mise en place de la configuration sudo de la VM
+    installer sudo pour eviter de retourner en root pour chaque operation.
+        apt install sudo // installation du paquet sudo
+    Mettre les paquets a jour
+        apt-get update // mise a jour des apt.
+        apt-get upgrade // installe les versions les plus recentes de paquets que l'on a.
+    Ajouter les privileges a notre user
+        sudo visudo // Accede a notre fichier des utilisateurs sudo situe ect/sudoers.d
+    Ajouter cette ligne en bas du fichier
+        jbonniva ALL=(ALL=ALL) ALL // Autorise jbonniva a executer toutes les commandes via sudo ALL =(           ALL:               ALL)              ALL
+                                                                                                [Hote]  [Tous les utilisateurs] [Tous les groupes] [Toutes les commandes]
+                                                                                                 Hote = La regle s'applique a toutes les machines
+                                                                                                 Tous les utilisateurs = englobes tous les utilisateurs, y compris root
+                                                                                                 Tous les groupes = idem que pour les utilisateurs
+                                                                                                 Toutes les commandes = specifie les commandes autorisees par l'utilisateur (ALL = Toutes, sinon separer la commande par une virgule)
+
+7/ Mise en place du serveur SSH
+    Installer le service SSH
+        sudo apt install openssh-server
+    Verifier que le serveur fonctionne bien
+        sudo systemctl status ssh
+    Aller dans /etc/ssh et chercher le fichier sshd_config
+        cd /etc/ssh
+    Editer le fichier sshd_config pour changer le port et empecher de se connecter en root a distance
+        Changer la ligne #Port 22 en Port 4242 et modifier la ligne PermitRootLogin no
+    Redemarrer le service ssh et verifier si le port est bien actif
+
+
+8/ Configurer le pare feu UFW
+    Installer le pare feu UFW
+        sudo apt install ufw
+    Autoriser la connection des SSH
+        sudo ufw allow ssh
+    Activer le pare feu UFW
+        sudo ufw enable
+    Voir si le pare feu est actif et si les status actifs
+        sudo ufw status numbered
+    Supprimer les status autre que 4242
+        sudo ufw delete [numero_du_status_a_delete]
+    Recheck si il n'y a que les ports 4242
+        sudo ufw status numbered
+
+
+9/ Se connecter via le terminal sur notre machine en ssh
+    Sur notre terminal de ubuntu
+        ssh jbonniva@127.0.0.1 -p4242 -v
+        MDP intra
+
+10/ Gestion des mots de passe via PAM pour les users
+    Modifier le nombre de jour concernant les mdp
+        /etc /login.defs
+        PASS_DAY_MAX = 30
+        PASS_DAY_MIN = 2
+        PASS_WARM_AGE = 7
+    Installer PAM
+        sudo apt-get install libpam-pwquality
+    Aller dans le fichier de gestion des mots de passe de PAM
+        /etc/pam.d/common-password
+    A la ligne pam_pwquality
+        retry = 3 // Nombre max d'essai
+        minlen = 10 // Longueur minimum
+        difok = 7 //
+        ucredit = -1 // Une majuscule minimum
+        dcredit = -1 // Un chiffre minimum
+        enforce_for_root // Root doit suivre le mouvement
+        max_repeat=3 // 3 x le meme caractere maximum
+        usercheck=0 // Pas le nom d'utilisateur dans le mdp
+    Obliger les utilisateurs a changer leur mdp a la prochaine connexion
+        sudo passwd -e USUARIO
+    Changer notre propre mdp
+        sudo passwd
+
+11/ Creer un groupe user42 et mettre jbonniva dedans
+    sudo groupadd user42
+    usermod -aG user42 jbonniva
+    
+12/
+
+
+
+
+

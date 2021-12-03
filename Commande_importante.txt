@@ -1,0 +1,62 @@
+<CTRL - droite> + F = Quitter le full screen
+<CTRL> + O = enregistrer sur Nano
+<CTRL> + X = quitter le fichier sur Nano
+<CTRL> + L = clear la page
+
+date = permet d'avoir la date de notre installation
+lsblk = Permet de voir les partitions du disque.
+apt install [nom du paquet] = installer un paquet
+apt-get update = mise a jour des paquets
+apt-get upgrade = mise a jour a la derniere version des paquets
+su - = passage en mode super user (root)
+su [nom_d'utilisateur] = changer d'utilisateur
+usermod -aG [nom_du_groupe] [nom_d'utilisateur] = ajoute l'utilisateur a un groupe
+getent group [nom_du_groupe] = liste des utilateurs du groupe
+exit = quitter le mode super user
+sudo visudo = fichier des utilisateur du groupe sudo
+sudo apt-get purge [nom_du_paquet] = supprime definitivement le paquet
+sudo -v = verifier que l'on a bien le statut sudo sur un user
+systemctl start sshd = permet de demarrer le service
+systemctl stop sshd = permet d'arreter le service
+systemctl restart sshd = permet de redemarrer le service
+ss -lntp = voir les ports en ecoute
+groupadd [nom_du_groupe] = creer un groupe sur la machine
+adduser [nom_de_l'utilisateur] = creer un nouvel utilisateur
+userdel [nom_de_l'utilisateur]
+passwd -e USUARIO = a faire en root, oblige les users a changer leur mdp a la prochaine connexion
+ss -tulnpu
+- t : afficher les ports TCP
+- l : afficher uniquement les ports en écoute (Listening)
+- n : afficher les adresses IP numériques (ne pas tenter de résolution DNS)
+- p : afficher les processus liés
+- u : afficher les ports UDP
+
+------------------------------------
+liste des paquets a installer :
+sudo (en root)
+vim
+openssh-server
+libpam-cracklib
+
+--------------------------------------
+lien utile =
+Installation debian :
+https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/
+
+Installer sudo et le parametrer :
+https://lecrabeinfo.net/installer-linux-debian-le-guide-complet.html
+
+Installation ssh :
+https://www.it-connect.fr/chapitres/installation-dun-serveur-ssh-et-premiere-connexion/
+
+Installer le pare feu UFW :
+
+
+IP static :
+https://wiki.debian.org/fr/NetworkConfiguration
+
+MDP GESTION
+http://manpages.ubuntu.com/manpages/bionic/man8/pam_pwquality.8.html
+http://www.ordinateur.cc/syst%C3%A8mes/Linux/206058.html
+https://blog.malandra.be/forcer-lutilisation-de-mot-de-passe-complexe/
+hhttps://www.youtube.com/watch?v=8tZzHCFU3c4&ab_channel=QLVTechnetttps://debian-facile.org/doc:securite:passwd:libpam-pwquality

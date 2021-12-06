@@ -160,6 +160,7 @@ groups <user> /#/ afficher les groupes de user
 sudo useradd <user> /#/ ajouter un user
 sudo groupadd <group> /#/ ajouter un groupe
 sudo gpasswd -a <user> <group>
+sudo usermod -aG sudo newuser /#/ ajouter a sudo un user
 
 --- Politique de mdp fort ---
 sudo apt-get install libpam-pwquality /#/ installe lib pour checker les pw
@@ -203,24 +204,31 @@ sudo reboot /#/ reboot la vm pour que les changements prennent effets
 ss -tunlp /#/ il faut seulement 2 ports 4242
 
 ////// monitoring.sh //////
+--- Installer syststat ---
+sudo apt-get install syststat
 
 --- voir cron pour l'afficher toutes les 10 min ---
 
 ARCHI=`uname -a`
 CPU_PHYSICAL=`grep -c ^processor /proc/cpuinfo`
 vCPU=`lscpu | grep "Thread(s)" | awk '{print $4}'`
-MEM_USE_PERC= `free -m | grep "Mem" | awk '{print $3/$2*100}'`
-MEM_USE=`free -m | grep "Mem" | awk '{print $3"/"$2"MB"}'`
-DISK_USE= df -m | awk '{sum+=$3}; END {print sum}'
-DISK_TOTAL= df -m | awk '{sum+=$2}; END {print sum}'
-DISK_USE_PERC= awk '{DISK_USE}'
+MEM_PERC=`free -m | grep "Mem" | awk '{print $3/$2*100}'`
+MEM_USE=`free -m | grep "Mem" | awk '{print $3"/"$2}'`
+DISK_USE=`df -m | awk '{sum+=$3}; END {print sum}'`
+DISK_TOTAL=`df -m | awk '{sum+=$2}; END {print sum}'`
+DISK_PERC=`df -m | awk '{sum+=$3}; {sum2+=$2}; END {print sum/sum2*100}'`
+CPU_PERC=`mpstat | grep "all" | awk '{print $3}'`
+LAST_BOOT=`uptime -s`
+WC_LVM=`lsblk | grep lvm | wc -l`
+LVM_USE=`if [$WC_LVM -eq 0]; then echo no; else echo yes; fi`
 
 wall "#Architeture : $ARCHI
-#CPU physical : $CPU_PHYSICAL
+#CPU Physical : $CPU_PHYSICAL
 #vCPU : $vCPU
-#Memory usage : $MEM_USE "${MEM_USE_PERC:0:4}"%
-#Disk Usage : $DISK_USE/$DISK_TOTAL MB"
-
-
-
+#Memory Usage : $MEM_USE MB (${MEM_PERC:00:4}%)
+#Disk Usage : $DISK_USE/$DISK_TOTAL MB (${DISK_PERC:0:4}%)
+#CPU Load : $CPU_PERC%
+#Last Boot : $LAST_BOOT
+#LVM Use : $LVM_USE
+#Connexions TCP : "
 

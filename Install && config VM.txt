@@ -102,11 +102,16 @@ apt-get update
 apt-get upgrade /#/ met paquets a jour
 sudo visudo /#/ ouvre le fichier des user sudo
 lleveque ALL=(ALL:ALL) ALL /#/ ajouter a la fin de visudo
+su lleveque /#/ se connecter a lleveque
 
 --- Changer le mdp ---
 sudo passwd user /#/ change le mdp du user rentre
 
+--- Installer vim ---
+sudo apt install vim /#/ installe vim
+
 --- Mettre SSH sur le port 4242 ---
+sudo apt-get install openssh-server /#/ installe ssh
 sudo systemctl status ssh /#/ donne le port sur le quel se trouve ssh
 sudo nano /etc/ssh/sshd_config /#/ ouvre le fichier config
 Port 4242 /#/ en dessous de port 22
@@ -114,6 +119,7 @@ save et quit
 sudo systemctl restart sshd /#/ redemarre le serv
 sudo systemctl status ssh /#/ verifie si le port ssh est le bon
 sudo apt-get install ifconfig /#/ installe ifconfig si pas installer
+sudo systemctl enable ssh /#/ autorise les co ssh
 ip a /#/ pour obtenir l'adresse ip
 ss -tulnp /#/ voir les ports utilises
 
@@ -130,7 +136,7 @@ ss -tulnp /#/ voir les ports utilises
 			Host Port = port non utilise (ex : 42420)
 			Guest Port = 4242
 	- Dans un autre terminal :
-		ssh user@10.12.6.10 -p42420 (42) ou ssh user@adressip -pHost_Port /#/ se connecte au serveur
+		ssh user@10.12.6.10 -p42420 (42) ou ssh user@adressip -pHost_Port -v /#/ se connecte au serveur
 Connection ok normalement
 
 --- Changer de user ---
@@ -139,9 +145,9 @@ su
 
 --- Set up UFW sur le port 4242 ---
 sudo apt updtae /#/ check dernieres mises a jour
+sudo apt install ufw /#/ installe ufw
 sudo nano /etc/default/ufw /#/ ouvre le fichier pour check si ipv6 est enable
 IPv6 = yes
-sudo apt install ufw /#/ installe ufw
 sudo ufw status /#/ check si ufw est actif
 sudo ufw enable /#/ active ufw
 sudo ufw allow 4242 /#/ active ufw sur le port 4242
@@ -156,7 +162,6 @@ sudo groupadd <group> /#/ ajouter un groupe
 sudo gpasswd -a <user> <group>
 
 --- Politique de mdp fort ---
-sudo apt install vim /#/ installe vim
 sudo apt-get install libpam-pwquality /#/ installe lib pour checker les pw
 
 sudo vim /etc/login.defs /#/ ouvre le fichier pour set les days limites mdp
@@ -181,28 +186,41 @@ Defaults	passwd_tries=3 /#/ set le nb de retry a 3
 Defaults	insults /#/ set le message d'erreur de mdp sudo en insultes
 Defaults	logfile="/var/log/sudo/sudo.log" /#/ archive chaque action en sudo
 
+--- Virer le port 68 et passer en IP static ---
+sudo apt install net-tools
+sudo vim /etc/network/interfaces /#/ fichier pour passer en static
+	-> en dessous de primary network interface
+		commenter les 2 1eres lignes
+		allow-hotplug enp0s3
+		iface enp0s3 inet static
+			address 10.0.2.15 /#/ ou address ip de la vm
+			netmask 255.255.255.0
+			gateway 10.0.2.2 /#/ ou les 3 1ers de l'adress de la vm et .2
+			broadcast 10.0.2.255 /#/ ou les 3 1ers de l'address de la vm et .255
+sudo vim /etc/resolv.conf
+	nameserver 8.8.4.4 /#/ server IPv4 de google
+sudo reboot /#/ reboot la vm pour que les changements prennent effets
+ss -tunlp /#/ il faut seulement 2 ports 4242
+
 ////// monitoring.sh //////
 
-voir cron pour l'afficher toutes les 10 min
+--- voir cron pour l'afficher toutes les 10 min ---
 
---- Creation des variables ---
 ARCHI=`uname -a`
 CPU_PHYSICAL=`grep -c ^processor /proc/cpuinfo`
 vCPU=`lscpu | grep "Thread(s)" | awk '{print $4}'`
-MEM_USE=`free -m | grep "Mem" | awk '{print $3"/"$2"MB ("$3/$2*100"%)"}'`
+MEM_USE_PERC= `free -m | grep "Mem" | awk '{print $3/$2*100}'`
+MEM_USE=`free -m | grep "Mem" | awk '{print $3"/"$2"MB"}'`
+DISK_USE= df -m | awk '{sum+=$3}; END {print sum}'
+DISK_TOTAL= df -m | awk '{sum+=$2}; END {print sum}'
+DISK_USE_PERC= awk '{DISK_USE}'
 
+wall "#Architeture : $ARCHI
+#CPU physical : $CPU_PHYSICAL
+#vCPU : $vCPU
+#Memory usage : $MEM_USE "${MEM_USE_PERC:0:4}"%
+#Disk Usage : $DISK_USE/$DISK_TOTAL MB"
 
---- Architecture ---
-wall "### Architeture ###
-$ARCHI /#/ afficher l'archi et la version kernel
-
---- CPU physical ---
-### CPU physical ###
-$CPU_PHYSICAL
-
---- vCPU---
-### vCPU ###
-$vCPU
 
 
 

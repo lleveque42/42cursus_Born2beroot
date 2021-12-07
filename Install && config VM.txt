@@ -207,7 +207,7 @@ ss -tunlp /#/ il faut seulement 2 ports 4242
 --- Installer syststat ---
 sudo apt-get install syststat
 
---- voir cron pour l'afficher toutes les 10 min ---
+--- Script ---
 
 ARCHI=`uname -a`
 CPU_PHYSICAL=`grep -c ^processor /proc/cpuinfo`
@@ -217,10 +217,15 @@ MEM_USE=`free -m | grep "Mem" | awk '{print $3"/"$2}'`
 DISK_USE=`df -m | awk '{sum+=$3}; END {print sum}'`
 DISK_TOTAL=`df -m | awk '{sum+=$2}; END {print sum}'`
 DISK_PERC=`df -m | awk '{sum+=$3}; {sum2+=$2}; END {print sum/sum2*100}'`
-CPU_PERC=`mpstat | grep "all" | awk '{print $3}'`
+CPU_PERC=`mpstat | grep "all" | awk '{print $4}'`
 LAST_BOOT=`uptime -s`
 WC_LVM=`lsblk | grep lvm | wc -l`
-LVM_USE=`if [$WC_LVM -eq 0]; then echo no; else echo yes; fi`
+LVM_USE=`if [ $WC_LVM -eq 0 ]; then echo no; else echo yes; fi`
+TCP_USE=`ss -s | grep TCP: | awk '{print ($4)+0}'`
+USER_LOG=`who | wc -l`
+IPv4=`hostname -I | awk '{print $1}'`
+MAC=`ip a | grep link/ether | awk '{print $2}'`
+SUDO_NB=`cat /var/log/sudo/sudo.log | grep COMMAND | wc -l`
 
 wall "#Architeture : $ARCHI
 #CPU Physical : $CPU_PHYSICAL
@@ -230,5 +235,14 @@ wall "#Architeture : $ARCHI
 #CPU Load : $CPU_PERC%
 #Last Boot : $LAST_BOOT
 #LVM Use : $LVM_USE
-#Connexions TCP : "
+#Connexions TCP : $TCP_USE ESTABLISHED
+#User log : $USER_LOG
+#Network : IP $IPv4 ($MAC)
+#Sudo : $SUDO_NB cmd"
 
+--- Cron ---
+
+sudo apt-get install cron /#/ installe cron
+sudo vim /etc/crontab /#/ ouvre le fichier crontab
+cp /home/lleveque/monitoring.sh /etc/init.d/ /#/ copie monitoring.sh dans le dossier que l'on veut
+*/* 10 * * * root bash /etc/init.d/monitoring.sh /#/ execute bash monitoring.sh toutes les 10 min
